@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Typing Master - Auto Line + Timer</title>
+  <p><h2>Developed by Divyanshu Sahu</h2></p>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #e4a9e4, #10c5c5);
+      color: rgb(154, 16, 16);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 2.5rem;
+    }
+
+    .box {
+      background: rgba(206, 233, 0, 0.1);
+      padding: 30px;
+      border-radius: 20px;  
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 0 15px rgba(179, 125, 125, 0.3);
+    }
+
+    #quote {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      min-height: 70px;
+    }
+
+    #input {
+      width: 100%;
+      padding: 10px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      margin-bottom: 15px;
+      background:#ddad56;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+
+    .result {
+      margin-top: 20px;
+      font-size: 1.1rem;
+      display: none;
+    }
+
+    #start {
+      margin-top: 20px;
+      padding: 10px 25px;
+      font-size: 1rem;
+      background: #39c71d;
+      color: rgb(15, 10, 10);
+      border: none;
+      border-radius: 10pxnone;
+      cursor: pointer;
+    }
+
+    #start:hover {
+      background: #e90f0f;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Typing Master</h1>
+  <div class="box">
+    <div id="quote">Click Start to begin typing...</div>
+    <input type="text" id="input" disabled placeholder="Start typing here..." />
+    
+    <div class="stats">
+      <div>⏱ Time Left: <span id="time">60</span>s</div>
+      <div>❌ Mistakes: <span id="mistakes">0</span></div>
+    </div>
+
+    <div class="result" id="result"></div>
+    <button id="start">Start</button>
+  </div>
+
+  <script>
+    const quotes = [
+      "my name is divyanshu sahu ",
+      "i am a btech 2 year student of from global institue of technology",
+      "i want to become a software engineer",
+      "and my interested for learning web devlopment and can justify for imergetic topics ",
+      "Life is what happens when you're busy making other plans.",
+      "Success is not the key to happiness. Happiness is the key to success.",
+      "The only way to do great work is to love what you do.",
+      "You only live once, but if you do it right, once is enough.",
+      "Believe you can and you're halfway there.",
+      "Don’t watch the clock; do what it does. Keep going.",
+      "Opportunities don’t happen. You create them.",
+      "Dream big and dare to fail.",
+      "Turn your wounds into wisdom.",
+      "Push yourself, because no one else is going to do it for you."
+    ];
+
+    let quoteIndex = 0;
+    let timeLeft = 60;
+    let timer;
+    let isRunning = false;
+    let totalTyped = 0;
+    let mistakeCount = 0;
+
+    const quoteEl = document.getElementById('quote');
+    const inputEl = document.getElementById('input');
+    const timeEl = document.getElementById('time');
+    const mistakesEl = document.getElementById('mistakes');
+    const resultEl = document.getElementById('result');
+    const startBtn = document.getElementById('start');
+
+    function shuffleQuotes() {
+      for (let i = quotes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [quotes[i], quotes[j]] = [quotes[j], quotes[i]];
+      }
+    }
+
+    function loadQuote() {
+      if (quoteIndex >= quotes.length) quoteIndex = 0;
+      quoteEl.textContent = quotes[quoteIndex];
+      inputEl.value = "";
+      quoteIndex++;
+    }
+
+    function startTyping() {
+      shuffleQuotes();
+      loadQuote();
+      isRunning = true;
+      inputEl.disabled = false;
+      inputEl.focus();
+      startBtn.disabled = true;
+      mistakeCount = 0;
+      totalTyped = 0;
+      mistakesEl.textContent = 0;
+      timeLeft = 60;
+      timeEl.textContent = timeLeft;
+      resultEl.style.display = "none";
+
+      timer = setInterval(() => {
+        timeLeft--;
+        timeEl.textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          inputEl.disabled = true;
+          isRunning = false;
+          showResult();
+          startBtn.disabled = false;
+        }
+      }, 1000);
+    }
+
+    function showResult() {
+      const wpm = Math.round((totalTyped / 5) / ((60 - timeLeft) / 60));
+      const accuracy = Math.max(0, Math.round(((totalTyped - mistakeCount) / totalTyped) * 100));
+      resultEl.innerHTML = `
+        ⌨️ <strong>WPM:</strong> ${wpm} <br>
+        🎯 <strong>Accuracy:</strong> ${isNaN(accuracy) ? 0 : accuracy}% <br>
+        🧮 <strong>Total Mistakes:</strong> ${mistakeCount}
+      `;
+      resultEl.style.display = "block";
+    }
+
+    inputEl.addEventListener('keydown', function (e) {
+      if (!isRunning) return;
+
+      if (e.key === "Enter") {
+        checkTyping();
+        loadQuote();
+        return;
+      }
+    });
+
+    function checkTyping() {
+      const typed = inputEl.value.trim();
+      const original = quoteEl.textContent.trim();
+      totalTyped += typed.length;
+
+      for (let i = 0; i < typed.length; i++) {
+        if (typed[i] !== original[i]) {
+          mistakeCount++;
+        }
+      }
+
+      mistakesEl.textContent = mistakeCount;
+    }
+
+    startBtn.addEventListener('click', startTyping);
+  </script>
+
+</body>
+</html>
